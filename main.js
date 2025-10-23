@@ -7,6 +7,55 @@ import CONFIG from './config.js';
   const { ORS_API_KEY, OWM_API_KEY, INCIDENT_RADIUS_METERS, SAMPLE_SPACING_METERS } = CONFIG;
 
   // ---------------------------
+  // Nominatim Autocomplete setup
+  // ---------------------------
+  async function fetchSuggestions(query, limit=5){
+    if(!query || query.length < 2) return [];
+    const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=IN&limit=${limit}&q=${encodeURIComponent(query)}`;
+    try {
+      const res = await fetch(url, {headers:{'Accept':'application/json'}});
+      const data = await res.json();
+      return data.map(d => ({name: d.display_name, lat: parseFloat(d.lat), lon: parseFloat(d.lon)}));
+    } catch(e){ console.error("Autocomplete fetch error", e); return []; }
+  }
+
+  function setupAutocomplete(inputId, suggestionsId){
+    const inputEl = document.getElementById(inputId);
+    const suggEl = document.getElementById(suggestionsId);
+    let selectedCoords = null;
+    let debounceTimeout = null;
+
+    inputEl.addEventListener('input', async ()=>{
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(async () => {
+        const q = inputEl.value.trim();
+        const results = await fetchSuggestions(q, 5);
+        suggEl.innerHTML = '';
+        results.forEach(r => {
+          const div = document.createElement('div');
+          div.className = 'suggestion-item';
+          div.textContent = r.name;
+          div.onclick = () => {
+            inputEl.value = r.name;
+            selectedCoords = {lat: r.lat, lon: r.lon};
+            suggEl.innerHTML = '';
+          };
+          suggEl.appendChild(div);
+        });
+      }, 300); // Debounce delay
+    });
+
+    inputEl.addEventListener('blur', () => {
+      setTimeout(() => { suggEl.innerHTML = ''; }, 150);
+    });
+
+    return () => selectedCoords; // function to get last selected coordinates
+  }
+
+  const getStartCoords = setupAutocomplete('startInput', 'startSuggestions');
+  const getEndCoords = setupAutocomplete('endInput', 'endSuggestions');
+
+  // ---------------------------
   // Helper functions
   // ---------------------------
   function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
@@ -316,16 +365,19 @@ import CONFIG from './config.js';
       const startText = document.getElementById('startInput').value.trim();
       const endText = document.getElementById('endInput').value.trim();
       const whenText = document.getElementById('whenInput').value;
-      if(!startText || !endText) return alert('Please enter start and destination (or click on map).');
+      if(!startText || !endText) return alert('Please enter start and destination.');
 
-      // geocode if needed (if entries are comma lat,lng skip geocode)
+      // 1️⃣ Try to use selected autocomplete coords first
+      let start = getStartCoords();
+      let end = getEndCoords();
+
+      // 2️⃣ If no autocomplete coords, try parsing lat,lng or geocoding
       const parseIfLatLng = txt => {
         const m = txt.match(/^\s*([+-]?\d+(\.\d+)?)[,\s]+([+-]?\d+(\.\d+)?)\s*$/);
         if(m) return {lat: parseFloat(m[1]), lon: parseFloat(m[3])};
         return null;
       };
-      let start = parseIfLatLng(startText);
-      let end = parseIfLatLng(endText);
+      if(!start) start = parseIfLatLng(startText);
 
       if(!start){
         const g = await geocode(startText);

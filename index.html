@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <title>Kerala Safe Route Prototype</title>
@@ -13,17 +14,22 @@
   <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <div id="app">
     <div id="panel">
       <h3>Kerala Safe Route Prototype</h3>
-      <div class="small muted">Load data from <code>/data/kerala_crime_2022_2023.csv</code> and <code>/data/kerala_accidents_2022_2023.csv</code>.</div>
+      <div class="small muted">Load data from <code>/data/kerala_crime_2022_2023.csv</code> and
+        <code>/data/kerala_accidents_2022_2023.csv</code>.
+      </div>
 
       <label>Start address (or click map)</label>
-      <input id="startInput" placeholder="e.g., Ernakulam, Kerala" />
+      <input id="startInput" placeholder="e.g., Ernakulam, Kerala" autocomplete="off" />
+      <div id="startSuggestions" class="suggestions"></div>
 
       <label>Destination</label>
-      <input id="endInput" placeholder="e.g., Thiruvananthapuram, Kerala" />
+      <input id="endInput" placeholder="e.g., Thiruvananthapuram, Kerala" autocomplete="off" />
+      <div id="endSuggestions" class="suggestions"></div>
 
       <label>Travel date & time</label>
       <input id="whenInput" type="datetime-local" />
@@ -48,7 +54,8 @@
     <div id="map"></div>
   </div>
 
-<script type="module" src="main.js"></script>
-</script>
+  <script type="module" src="main.js"></script>
+  </script>
 </body>
+
 </html>
