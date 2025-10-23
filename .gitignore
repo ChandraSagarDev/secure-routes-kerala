@@ -1,0 +1,10 @@
+# Config with API keys
+config.js
+
+# Data files
+data/*.csv
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store

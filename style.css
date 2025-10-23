@@ -1,0 +1,14 @@
+body { margin:0; font-family:system-ui,Segoe UI,Roboto,Arial; }
+#app { display:flex; height:100vh; }
+#map { flex:1; }
+#panel {
+  width:360px; max-width:40%;
+  background:#fff; box-shadow:0 0 10px rgba(0,0,0,.12);
+  padding:12px; overflow:auto;
+}
+input, button, select { width:100%; padding:8px; margin:6px 0; box-sizing:border-box }
+.small { font-size:0.9rem; color:#444 }
+.route-info { margin:6px 0; padding:8px; border-radius:6px; background:#f7f7f7 }
+.fastest { border-left:6px solid #e63946 }
+.safest { border-left:6px solid #2a9d8f }
+.muted { color:#666; font-size:0.9rem }
