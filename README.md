@@ -2,7 +2,7 @@
 
 A web application that helps users find safer travel routes in Kerala by analyzing historical crime and accident data along with real-time weather conditions.
 
-![Kerala Safe Route Prototype](https://raw.githubusercontent.com/ChandraSagarDev/secure-routes-kerala/master/docs/preview.png)
+![Kerala Safe Route Prototype](docs/preview.png)
 
 ## 🌟 Features
 
