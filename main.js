@@ -4,7 +4,7 @@ import CONFIG from './config.js';
   // ---------------------------
   // Get configuration from config.js
   // ---------------------------
-  const { ORS_API_KEY, OWM_API_KEY, INCIDENT_RADIUS_METERS, SAMPLE_SPACING_METERS } = CONFIG;
+  const { ORS_API_KEY, WEATHER_API_KEY, INCIDENT_RADIUS_METERS, SAMPLE_SPACING_METERS } = CONFIG;
 
   // ---------------------------
   // Nominatim Autocomplete setup
@@ -131,6 +131,52 @@ import CONFIG from './config.js';
     const safety = 1 / (1 + alpha * avgRisk);
     return Math.max(0, Math.min(1, safety));
   }
+
+  async function getWeatherAtTime(lat, lon, datetime) {
+    const timestamp = Math.floor(new Date(datetime).getTime() / 1000);
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${CONFIG.WEATHER_API_KEY}&units=metric`;
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!data.list) return null;
+
+      // Find the forecast closest to the requested time
+      const forecast = data.list.reduce((closest, item) => {
+        return Math.abs(item.dt - timestamp) < Math.abs(closest.dt - timestamp)
+          ? item
+          : closest;
+      });
+
+      const weather = forecast.weather[0].main.toLowerCase();
+      const temp = forecast.main.temp;
+
+      // Smart travel suggestion
+      let suggestion = "✅ Good time to travel.";
+      if (weather.includes("rain") || weather.includes("storm")) {
+        suggestion = "⚠️ Heavy rain expected — consider postponing travel.";
+      } else if (weather.includes("snow")) {
+        suggestion = "❄️ Snow expected — avoid late-night travel.";
+      } else if (weather.includes("cloud")) {
+        suggestion = "☁️ Cloudy but safe for travel.";
+      } else if (temp > 34) {
+        suggestion = "🌡️ Very hot — better to travel early morning or evening.";
+      } else if (temp < 18) {
+        suggestion = "🧥 Cool and pleasant — good for travel.";
+      }
+
+      return {
+        condition: forecast.weather[0].description,
+        temp,
+        suggestion,
+        forecastTime: forecast.dt_txt
+      };
+    } catch (err) {
+      console.error("Weather API error:", err);
+      return null;
+    }
+  }
+
 
   // Simple weather risk multiplier from OpenWeatherMap hourly data
   // Returns multiplier in (0.2 .. 1) to multiply safety score.
@@ -289,10 +335,10 @@ import CONFIG from './config.js';
 
   // request OWM hourly forecast at latlon and timestamp (UNIX)
   async function getWeatherForecast(lat, lon, unixTs) {
-    if (!OWM_API_KEY || OWM_API_KEY === "PUT_YOUR_OWM_KEY_HERE") return null;
+    if (!WEATHER_API_KEY || WEATHER_API_KEY === "PUT_YOUR_OWM_KEY_HERE") return null;
     // One Call 3.0 requires different endpoints; One Call 2.5 hourly is accessible via /data/2.5/onecall? but current free usage: use hourly forecast endpoint
     // We'll call "onecall" (legacy) which is widely available for prototype
-    const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,daily,alerts&appid=${OWM_API_KEY}&units=metric`;
+    const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,daily,alerts&appid=${WEATHER_API_KEY}&units=metric`;
     const r = await fetch(url);
     if (!r.ok) return null;
     const json = await r.json();
@@ -448,7 +494,7 @@ import CONFIG from './config.js';
         const baseSafety = computeSafetyScore(c.coords, incidents);
         const midpoint = getMidpoint(c.coords);
         let weather = null;
-        if (OWM_API_KEY && OWM_API_KEY !== "PUT_YOUR_OWM_KEY_HERE") {
+        if (WEATHER_API_KEY && WEATHER_API_KEY !== "PUT_YOUR_OWM_KEY_HERE") {
           try {
             weather = await getWeatherForecast(midpoint[0], midpoint[1], whenUnix);
           } catch (e) {
@@ -509,6 +555,27 @@ import CONFIG from './config.js';
         note.innerText = 'Tip: Safest route shown in green (may be longer).';
         container.appendChild(note);
       }
+
+// --- Weather insights section ---
+const [destLat, destLon] = fastestRes.coords.at(-1);
+const datetime = document.getElementById('whenInput').value;
+
+const weather = await getWeatherAtTime(destLat, destLon, datetime);
+
+
+if (weather) {
+  const weatherDiv = document.createElement('div');
+  weatherDiv.className = 'route-info weather';
+  weatherDiv.innerHTML = `
+    <b>Weather Insights</b>
+    <div class="small">Forecast: ${weather.condition}</div>
+    <div class="small">Temperature: ${weather.temp.toFixed(1)} °C</div>
+    <div class="small">Forecast time: ${weather.forecastTime}</div>
+    <div class="small"><b>${weather.suggestion}</b></div>
+  `;
+  container.appendChild(weatherDiv);
+}
+
 
     } catch (err) {
       console.error(err);
