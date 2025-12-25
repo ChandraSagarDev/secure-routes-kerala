@@ -19,10 +19,7 @@
   <div id="app">
     <div id="panel">
       <h3>Kerala Safe Route Prototype</h3>
-      <div class="small muted">Load data from <code>/data/kerala_crime_2022_2023.csv</code> and
-        <code>/data/kerala_accidents_2022_2023.csv</code>.
-      </div>
-
+      
       <label>Start address (or click map)</label>
       <input id="startInput" placeholder="e.g., Ernakulam, Kerala" autocomplete="off" />
       <div id="startSuggestions" class="suggestions"></div>
@@ -51,6 +48,7 @@
           <li>Weather modifies safety score (if OWM key provided).</li>
         </ul>
       </div>
+      <div class="small muted">Based on mock data from <code>/data/kerala_crime_2022_2023.csv</code>  <code>/data/kerala_accidents_2022_2023.csv</code>.</div>
     </div>
 
     <div id="map"></div>

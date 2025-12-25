@@ -544,7 +544,6 @@ import CONFIG from './config.js';
         div.innerHTML = `<b>${label}</b>
           <div class="small">Distance: ${r.summary ? (r.summary.distance / 1000).toFixed(2) + ' km' : 'N/A'} · Duration: ${r.summary ? Math.round(r.summary.duration / 60) + ' min' : 'N/A'}</div>
           <div class="small">Safety score: ${(r.finalSafety || 0).toFixed(2)} · Incidents near route: ${r.nearbyCount}</div>
-          <div class="small">${r.weather ? `Weather at travel time: ${r.weather.weather && r.weather.weather[0] ? r.weather.weather[0].description : ''}, temp ${r.weather.temp}°C` : 'Weather: n/a'}</div>
         `;
         return div;
       };
